@@ -25,6 +25,7 @@ import re
 import requests
 import pdfkit
 from PIL import Image
+from pathlib import Path
 
 url = "https://app.advbox.com.br/api/v1/"
 
@@ -133,7 +134,7 @@ def verificarprocessoalvara(processo):
             
     return verificar
 
-def lerbaixados(dir,caminhodirdoc = 'C:/Users/ian/Documents/pro/consultareproc'):
+def lerbaixados(dir,caminhodirdoc = Path(__file__).parent.resolve().as_posix()):
     lista = []
     hoje = datetime.today()
     # Adicionando um dia
@@ -292,15 +293,18 @@ class cadastrartarefa:
             elemento.send_keys(dataf)
             # Agora, procure pelo elemento
             file_input = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input.simple-upload-file')))
-            saida = "C:/Users/ian/Documents/pro/consultareproc/kitpdf/saida.pdf"
+            diretorio = Path(__file__).parent.resolve().as_posix()
+            saida = f"{diretorio}/kitpdf/saida.pdf"
+            
             for b in a['documentos']:
                 if 'html' in b:
                     
                     print(b)
                     try:
                         pdfkit.from_file(b, saida, configuration=self.confightmltopdf)
-                    except:
-                        pass
+                    except Exception as e:
+                        print(e)
+                        
                 elif 'png' in b:
                     imagem = Image.open(b)
                     imagem_rgb = imagem.convert("RGB")

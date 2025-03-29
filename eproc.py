@@ -62,7 +62,8 @@ def consultarsucesso(processo,txt='encontrado/encontrado.txt'):
     return resultado
 
 def registrarconsulta(mensagem: str, txt='consultados/consultados.txt'):
-    processo = mensagem.split(' ')[0]  # Extrai o processo
+    
+    processo = mensagem.strip().split(' ')[0]  # Extrai o processo
     atualizado = False  # Flag para verificar se foi substituído
 
     # Lê todas as linhas do arquivo
@@ -140,16 +141,6 @@ class eproc:
         for string in list(texto):
             time.sleep(random.uniform(0.2, 1))
             item.send_keys(string)
-        
-    def tentarclicar(self,item,tentativas:int):
-        tentativa = tentativas
-        while tentativa != 0:
-            try:
-                item.click()
-                break
-            except:
-                time.sleep(0.5)
-                tentativa -= 1
                 
     def logareproc(self):
         self.driver.get('https://eproc1.tjto.jus.br/eprocV2_prod_1grau/externo_controlador.php?acao=principal')
@@ -185,12 +176,15 @@ class eproc:
             totp = pyotp.TOTP(sk)  
             code = totp.now()
             
-            senha = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located ((By.ID, 'txtAcessoCodigo')))
-            senha.send_keys(code)
-            
-            #btnValidar
-            validar = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located ((By.ID, 'btnValidar')))
-            validar.click()
+            try:
+                senha = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located ((By.ID, 'txtAcessoCodigo')))
+                senha.send_keys(code)
+                
+                #btnValidar
+                validar = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located ((By.ID, 'btnValidar')))
+                validar.click()
+            except:
+                print('não cobrou código')
             
             hintclose = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located ((By.ID, 'hint-close')))
             hintclose.click()
@@ -215,9 +209,8 @@ class eproc:
             return False
             
     def procuraralvara(self):
-        
         relacao = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located ((By.XPATH, "//*[contains(text(), 'Relação de processos')]")))
-        self.tentarclicar(relacao,5)
+        relacao.click()
         classe = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located ((By.ID, "selClasseProcesso")))
         classe.click()
         
@@ -230,7 +223,7 @@ class eproc:
         self.data_hoje = hoje.strftime('%d/%m/%Y')
         
         #Até quantos dias iremos olhar para trás
-        dais = hoje - timedelta(days=2) 
+        dais = hoje - timedelta(days=1) 
 
         # Formatar a data no formato ddmmyyyy
         self.data_ontem = dais.strftime('%d/%m/%Y')
@@ -291,9 +284,10 @@ class eproc:
                 continue
             
             link.send_keys(Keys.CONTROL + Keys.RETURN)  # Windows
+            time.sleep(0.3)
             abas = self.driver.window_handles
-            self.driver.switch_to.window(abas[-1])
             
+            self.driver.switch_to.window(abas[-1])
             data_atual = datetime.now().strftime("%d/%m/%Y")
             registrarconsulta(f'{textoproc} {data_atual}')
             
@@ -440,10 +434,16 @@ def consultaralvaraseproc():
             print('encerrando')
             break
 
-# Agendando a tarefa para rodar às 00:05
-schedule.every().day.at("00:05").do(consultaralvaraseproc)
 
-# Loop para rodar o agendamento
-while True:
-    schedule.run_pending()  # Verifica se há tarefas agendadas para rodar
-    time.sleep(30)  # Espera 1 minuto antes de verificar novamente
+nn = input('a ou d')
+
+if nn == 'a':
+    consultaralvaraseproc()
+else:
+    # Agendando a tarefa para rodar às 00:05
+    schedule.every().day.at("00:05").do(consultaralvaraseproc)
+
+    # Loop para rodar o agendamento
+    while True:
+        schedule.run_pending()  # Verifica se há tarefas agendadas para rodar
+        time.sleep(30)  # Espera 1 minuto antes de verificar novamente
