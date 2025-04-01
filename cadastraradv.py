@@ -179,7 +179,7 @@ class cadastrartarefa:
         self.caminhotxt = caminhotxt
         self.dicionario = dicionario
         self.tarefa = tarefa
-        path_wkhtmltopdf = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+        path_wkhtmltopdf = r"C:\Users\T-GAMER\Documents\wkhtmltopdf\bin\wkhtmltopdf.exe"
         self.confightmltopdf = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
     def startdriver(self):
         options = uc.ChromeOptions()

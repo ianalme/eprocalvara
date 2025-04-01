@@ -1,5 +1,4 @@
 git init
-git add .gitignore
 git add .
 git commit -m "Adicionando documentos ao repositório"
 git remote add origin https://github.com/ianalme/eprocalvara.git

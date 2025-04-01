@@ -119,8 +119,8 @@ class eproc:
         #options.add_argument("--headless")  # Executa o navegador sem abrir a janela
         options.add_argument("--disable-gpu")  # Desativa a GPU para melhorar a velocidade no modo headless
         options.add_argument("--start-minimized")  # Inicia o navegador minimizado
-        options.add_argument("user-data-dir=C:/Users/ian/AppData/Local/Google/Chrome/User Data")
-        options.add_argument("--profile-directory=Profile 3")  # <-- Adicione "--" antes
+        #options.add_argument("user-data-dir=C:/Users/ian/AppData/Local/Google/Chrome/User Data")
+        #options.add_argument("--profile-directory=Profile 3")  # <-- Adicione "--" antes
         options.add_argument('--disable-popup-blocking')  # Desativa bloqueio de pop-ups
         options.add_experimental_option('prefs', {
             "download.default_directory": f'{tempfiles}',
