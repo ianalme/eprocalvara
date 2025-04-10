@@ -111,16 +111,21 @@ def consultarconsulta(processo,txt='consultados/consultados.txt'):
     
 
 class eproc:
-    def __init__(self,tempfiles):
-        
+    def __init__(self,tempfiles,grau,diasatras):
+        self.dias = int(diasatras)
+        self.grau = grau
+        if self.grau == 1:
+            self.linkeproc = 'https://eproc1.tjto.jus.br/eprocV2_prod_1grau/externo_controlador.php?acao=principal'
+        elif self.grau == 2:
+            self.linkeproc = 'https://eproc2.tjto.jus.br/eprocV2_prod_2grau/externo_controlador.php?acao=principal'
         ###
         self.tempfiles = tempfiles
         options = uc.ChromeOptions()
         #options.add_argument("--headless")  # Executa o navegador sem abrir a janela
         options.add_argument("--disable-gpu")  # Desativa a GPU para melhorar a velocidade no modo headless
         options.add_argument("--start-minimized")  # Inicia o navegador minimizado
-        #options.add_argument("user-data-dir=C:/Users/ian/AppData/Local/Google/Chrome/User Data")
-        #options.add_argument("--profile-directory=Profile 3")  # <-- Adicione "--" antes
+        options.add_argument(r"C:\Users\T-GAMER\AppData\Local\Google\Chrome\User Data")
+        options.add_argument("--profile-directory=Profile 1")  # <-- Adicione "--" antes
         options.add_argument('--disable-popup-blocking')  # Desativa bloqueio de pop-ups
         options.add_experimental_option('prefs', {
             "download.default_directory": f'{tempfiles}',
@@ -143,7 +148,7 @@ class eproc:
             item.send_keys(string)
                 
     def logareproc(self):
-        self.driver.get('https://eproc1.tjto.jus.br/eprocV2_prod_1grau/externo_controlador.php?acao=principal')
+        self.driver.get(self.linkeproc)
         
         time.sleep(2)
         
@@ -154,7 +159,7 @@ class eproc:
         except:
             print("Nenhum alerta encontrado.")
             
-        if self.driver.current_url != 'https://eproc1.tjto.jus.br/eprocV2_prod_1grau/externo_controlador.php?acao=principal':
+        if self.driver.current_url != self.linkeproc:
             print('alterou')
             
         else:
@@ -217,13 +222,16 @@ class eproc:
         select = Select(classe)
 
         # Seleciona a opção pelo valor
-        select.select_by_value("0000014559")
+        if self.grau == 1:
+            select.select_by_value("0000014559")
+        elif self.grau == 2:
+            select.select_by_value("0000009388")
         
         hoje = datetime.today()
         self.data_hoje = hoje.strftime('%d/%m/%Y')
         
         #Até quantos dias iremos olhar para trás
-        dais = hoje - timedelta(days=1) 
+        dais = hoje - timedelta(days=self.dias) 
 
         # Formatar a data no formato ddmmyyyy
         self.data_ontem = dais.strftime('%d/%m/%Y')
@@ -319,12 +327,18 @@ class eproc:
             if "INSS - INSTITUTO NACIONAL DO SEGURO SOCIAL" in html_content:
                 try:
                     # Aguarda até que o <label> com o texto "Expedido Alvará" esteja presente
-                    label_element = WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.XPATH, "//label[@class='infraEventoDescricao' and text()='Expedido Alvará']")))
+                    try:
+                        #caminho normal
+                        label_element = WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.XPATH, "//label[@class='infraEventoDescricao' and text()='Expedido Alvará']")))
+                        # Sobe dois níveis: pai -> avô
+                        avo_element = label_element.find_element(By.XPATH, "./../..")  # Primeiro ../ sobe para o pai, segundo ../ sobe para o avô
+                        eventoalvara = str(avo_element.get_attribute('id')).replace('trEvento','')
 
-                    # Sobe dois níveis: pai -> avô
-                    avo_element = label_element.find_element(By.XPATH, "./../..")  # Primeiro ../ sobe para o pai, segundo ../ sobe para o avô
-                    eventoalvara = str(avo_element.get_attribute('id')).replace('trEvento','')
-                    
+                    except:
+                        #alternativo
+                        avo_element = WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.XPATH, "//td[contains(., 'Alvará Pago')]/ancestor::tr")))
+                        eventoalvara = str(avo_element.get_attribute('id')).replace('trEvento','')
+
                     todos_os_filhos = avo_element.find_elements(By.XPATH, ".//*")
 
                     # Percorre e imprime as tags e atributos dos filhos
@@ -365,9 +379,17 @@ class eproc:
                 
                 try:
                     # Aguarda até que o <label> com o texto "Expedido Alvará" esteja presente
-                    avo_element = WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.XPATH, "//td[contains(., 'Alvará Pago')]/ancestor::tr")))
-                    eventoalvara = str(avo_element.get_attribute('id')).replace('trEvento','')
-                    
+                    try:
+                        #caminho normal
+                        avo_element = WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.XPATH, "//td[contains(., 'Alvará Pago')]/ancestor::tr")))
+                        eventoalvara = str(avo_element.get_attribute('id')).replace('trEvento','')
+                    except:
+                        #alternativo
+                        label_element = WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.XPATH, "//label[@class='infraEventoDescricao' and text()='Expedido Alvará']")))
+                        # Sobe dois níveis: pai -> avô
+                        avo_element = label_element.find_element(By.XPATH, "./../..")  # Primeiro ../ sobe para o pai, segundo ../ sobe para o avô
+                        eventoalvara = str(avo_element.get_attribute('id')).replace('trEvento','')
+
                     todos_os_filhos = avo_element.find_elements(By.XPATH, ".//*")
 
                     # Percorre e imprime as tags e atributos dos filhos
@@ -408,6 +430,7 @@ class eproc:
                     self.driver.switch_to.window(self.driver.window_handles[-1])
                     
                 except Exception as e: 
+                    print(e)
                     pass
                 
             #time.sleep(1)  # Espera o 1 segundo
@@ -418,8 +441,8 @@ class eproc:
             self.driver.switch_to.window(abas[0])
             
 
-def consultaralvaraseproc():  
-    x = eproc(r'C:\Users\ian\Downloads')
+def consultaralvaraseproc(grau = 1, diasatras = 1):  
+    x = eproc(r'C:\Users\ian\Downloads',grau = grau, diasatras = diasatras)
     x.logareproc()
     #x.consultarprocesso('0002465-31.2022.8.27.2702')
     page = 1
@@ -438,11 +461,12 @@ def consultaralvaraseproc():
 nn = input('a ou d')
 
 if nn == 'a':
-    consultaralvaraseproc()
+    #consultaralvaraseproc()
+    consultaralvaraseproc(grau = 2,diasatras=90)
 else:
     # Agendando a tarefa para rodar às 00:05
     schedule.every().day.at("00:05").do(consultaralvaraseproc)
-
+    schedule.every().day.at("00:08").do(consultaralvaraseproc(grau = 2))
     # Loop para rodar o agendamento
     while True:
         schedule.run_pending()  # Verifica se há tarefas agendadas para rodar

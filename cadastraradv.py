@@ -26,8 +26,15 @@ import requests
 import pdfkit
 from PIL import Image
 from pathlib import Path
+from xhtml2pdf import pisa
 
 url = "https://app.advbox.com.br/api/v1/"
+
+def convert_html_to_pdf(dir, output):
+    with open(dir, 'r') as html_file:
+        html_content = html_file.read()
+    with open(output, 'wb') as pdf_file:
+        pisa_status = pisa.CreatePDF(html_content, dest=pdf_file)
 
 def comparar_datas(data_str, dias):
     # Converte a string para o formato de data (DD/MM/YYYY)
@@ -181,6 +188,7 @@ class cadastrartarefa:
         self.tarefa = tarefa
         path_wkhtmltopdf = r"C:\Users\T-GAMER\Documents\wkhtmltopdf\bin\wkhtmltopdf.exe"
         self.confightmltopdf = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+
     def startdriver(self):
         options = uc.ChromeOptions()
         #options.add_argument("--headless")  # Executa o navegador sem abrir a janela
