@@ -218,3 +218,7 @@ informações:0000440-48.2024.8.27.2743 46 08/04/2025 17:20:26/bPuoqTNIAxJtmV.ht
 informações:0000537-48.2024.8.27.2743 51 08/04/2025 17:20:23/jenQihhonIJusF.html #cadastrada
 informações:0000613-72.2024.8.27.2743 51 04/04/2025 19:46:39/SXPHhQsikwBbsA.html #cadastrada
 informações:0000106-81.2022.8.27.2711 80 13/06/2024 17:39:30/ejmZfTfDYoMhjK.html #cadastrada
+informações:0001409-34.2022.8.27.2743 109 11/04/2025 21:27:13/AdgUUXKtIeAGKP.html #cadastrada
+informações:0002400-04.2021.8.27.2724 117 11/04/2025 21:27:08/KkoCbXsbwrDWNJ.html #cadastrada
+informações:0000698-58.2024.8.27.2743 53 11/04/2025 21:27:06/tuuTGysFrKYpPx.html #cadastrada
+informações:0001535-84.2022.8.27.2743 90 11/04/2025 21:27:04/gYviTCeoazLbrY.html #cadastrada

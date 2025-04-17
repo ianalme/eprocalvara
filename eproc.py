@@ -18,9 +18,27 @@ import pyotp
 import re
 import string
 import pdfkit
+import shutil
+import os
 
 sk = "GZRTONRWG5QTOYJTMFRGMOJRGM3WIZJQ"  # Substitua pelo seu código secreto correto
 
+def moverarquivo(local,novonome):
+    # Pasta onde o Selenium salvou o PDF
+    pasta_origem = "C:/seleniumpdf"
+
+    # Pasta de destino e novo nome
+    destino = f"{local}/{novonome}.pdf"  # Altere conforme necessário
+
+    # Lista os arquivos da pasta e pega o mais recente
+    arquivos = [os.path.join(pasta_origem, f) for f in os.listdir(pasta_origem)]
+    arquivo_mais_recente = max(arquivos, key=os.path.getctime)
+
+    # Move com novo nome
+    shutil.move(arquivo_mais_recente, destino)
+
+    print("Arquivo mais recente movido com sucesso!")
+    
 def datasuperior(data1: str, data2: str) -> bool: #data 1 é data da última movimentação, data2 é a data limite do escopo
     """
     Verifica se data1 é menor ou igual a data2.
@@ -124,15 +142,17 @@ class eproc:
         #options.add_argument("--headless")  # Executa o navegador sem abrir a janela
         options.add_argument("--disable-gpu")  # Desativa a GPU para melhorar a velocidade no modo headless
         options.add_argument("--start-minimized")  # Inicia o navegador minimizado
-        options.add_argument(r"C:\Users\T-GAMER\AppData\Local\Google\Chrome\User Data")
-        options.add_argument("--profile-directory=Profile 1")  # <-- Adicione "--" antes
+        options.add_argument(r"user-data-dir=C:\Users\T-GAMER\AppData\Local\Google\Chrome\User Data\Default")
         options.add_argument('--disable-popup-blocking')  # Desativa bloqueio de pop-ups
         options.add_experimental_option('prefs', {
-            "download.default_directory": f'{tempfiles}',
-            "download.prompt_for_download": False,
-            "download.directory_upgrade": True,
-            "plugins.always_open_pdf_externally": True #It will not show PDF directly in chrome
+            "download.default_directory": tempfiles,
+            "download.prompt_for_download": False,  # Não perguntar onde salvar
+            "plugins.always_open_pdf_externally": True,  # Impede o Chrome de abrir o PDF no visualizador interno
+            "savefile.default_directory": tempfiles,  # Garante o diretório de download
+            "safebrowsing.enabled": True,  # Habilita o modo de navegação segura (para prevenir erros)
+            "plugins.plugins_disabled": ["Chrome PDF Viewer"],  # Desativa o visualizador PDF do Chrome
         })
+        options.add_argument("--kiosk-printing")  # Impede o Chrome de abrir o preview de impressão
         self.driver = uc.Chrome(options=options)
                 # Obtém a resolução da tela principal
         screen_width = self.driver.execute_script("return screen.width")
@@ -196,11 +216,43 @@ class eproc:
         
     def consultarprocesso(self,numprocess):
         padrao_data_hora = re.compile(r"\b\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}\b")
-
         pesquisa = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located ((By.ID, 'txtNumProcessoPesquisaRapida')))
         pesquisa.send_keys(numprocess) #'0002465-31.2022.8.27.2702'
         pesquisa.send_keys(Keys.ENTER)
         
+        try:
+            #caminho normal
+            avo_element = WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.XPATH, "//td[contains(., 'Alvará Pago')]/ancestor::tr")))
+            eventoalvara = str(avo_element.get_attribute('id')).replace('trEvento','')
+        except:
+            #alternativo
+            label_element = WebDriverWait(self.driver, 1).until(EC.presence_of_element_located((By.XPATH, "//label[@class='infraEventoDescricao' and text()='Expedido Alvará']")))
+            # Sobe dois níveis: pai -> avô
+            avo_element = label_element.find_element(By.XPATH, "./../..")  # Primeiro ../ sobe para o pai, segundo ../ sobe para o avô
+            eventoalvara = str(avo_element.get_attribute('id')).replace('trEvento','')
+            
+        #print(eventoalvara,dataalvara)
+        netos = WebDriverWait(avo_element, 10).until(EC.presence_of_all_elements_located((By.XPATH, ".//descendant::*[@class='infraLinkDocumento']")))
+        netos[0].click()
+        
+        self.driver.switch_to.window(self.driver.window_handles[-1])
+        time.sleep(2)
+        html_content = self.driver.page_source
+        letras_aleatorias = ''.join(random.choices(string.ascii_letters, k=14))
+        # Se o conteúdo for um PDF
+
+        if '/data-mimetype="pdf"' in html_content:
+            html_content = self.driver.page_source
+            iframe = self.driver.find_element(By.NAME, "superior")
+            self.driver.switch_to.frame(iframe)
+            print(html_content)
+            self.driver.execute_script('window.print();')
+            time.sleep(7)
+            moverarquivo('testecadastro',letras_aleatorias)
+            #print('baixar pdf')
+            #self.driver.save_screenshot(f"alvaraoutros/{letras_aleatorias}.png")
+            #terminacao = 'png'
+            terminacao = 'pdf'
     def passardepagina(self):
         try:
             proximapag = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located ((By.ID, "lnkInfraProximaPaginaSuperior")))
@@ -410,11 +462,20 @@ class eproc:
                     html_content = self.driver.page_source
                     letras_aleatorias = ''.join(random.choices(string.ascii_letters, k=14))
                     # Se o conteúdo for um PDF
+            
                     if '/data-mimetype="pdf"' in html_content:
-                        print('baixar pdf')
-                        self.driver.save_screenshot(f"alvaraoutros/{letras_aleatorias}.png")
-                        terminacao = 'png'
-                        
+                        html_content = self.driver.page_source
+                        iframe = self.driver.find_element(By.NAME, "superior")
+                        self.driver.switch_to.frame(iframe)
+                        print(html_content)
+                        self.driver.execute_script('window.print();')
+                        time.sleep(7)
+                        moverarquivo('alvaraoutros',letras_aleatorias)
+                        #print('baixar pdf')
+                        #self.driver.save_screenshot(f"alvaraoutros/{letras_aleatorias}.png")
+                        #terminacao = 'png'
+                        terminacao = 'pdf'
+   
                     else:    
                         terminacao = 'html'
                         # Defina o caminho para salvar o arquivo HTML
@@ -458,16 +519,23 @@ def consultaralvaraseproc(grau = 1, diasatras = 1):
             break
 
 
-nn = input('a ou d')
+nn = input('agora ou depois (a) ou (d)')
 
 if nn == 'a':
-    #consultaralvaraseproc()
-    consultaralvaraseproc(grau = 2,diasatras=90)
-else:
+    nn = input('(1) ou (2) grau')
+    if nn == '1':
+        consultaralvaraseproc()
+    else:
+        consultaralvaraseproc(grau = 2)
+elif nn =='d':
     # Agendando a tarefa para rodar às 00:05
     schedule.every().day.at("00:05").do(consultaralvaraseproc)
-    schedule.every().day.at("00:08").do(consultaralvaraseproc(grau = 2))
+    schedule.every().day.at("00:08").do(lambda: consultaralvaraseproc(grau=2))
     # Loop para rodar o agendamento
     while True:
         schedule.run_pending()  # Verifica se há tarefas agendadas para rodar
         time.sleep(30)  # Espera 1 minuto antes de verificar novamente
+else:
+    x = eproc(r'C:\Users\ian\Downloads',grau=1,diasatras=1)
+    x.logareproc()
+    x.consultarprocesso('0000904-11.2018.8.27.2702')

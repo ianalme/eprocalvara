@@ -318,6 +318,9 @@ class cadastrartarefa:
                     imagem_rgb = imagem.convert("RGB")
                     imagem_rgb.save(saida)
                     
+                if 'pdf' in b:
+                    shutil.copy2(b, saida)
+                    
                 file_input.send_keys(saida)
                 time.sleep(6)
                 os.remove(saida)
