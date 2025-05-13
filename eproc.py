@@ -10,6 +10,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.alert import Alert
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from datetime import datetime
 from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException, ElementNotInteractableException,TimeoutException,ElementClickInterceptedException
 import undetected_chromedriver as uc
@@ -20,6 +22,9 @@ import string
 import pdfkit
 import shutil
 import os
+
+# Aqui, será preciso que você crie um perfil no chrome, separado dos perfis convencionais utilizados por usuário comum, de preferência em uma pasta separada// você vai configurar, apartir de ctrl p mais salvar como pdf, e selecionar certinho
+
 
 sk = "GZRTONRWG5QTOYJTMFRGMOJRGM3WIZJQ"  # Substitua pelo seu código secreto correto
 
@@ -129,24 +134,26 @@ def consultarconsulta(processo,txt='consultados/consultados.txt'):
     
 
 class eproc:
-    def __init__(self,tempfiles,grau,diasatras):
+    def __init__(self,tempfiles,grau,diasatras,tipo):
+        self.tipo = tipo
         self.dias = int(diasatras)
         self.grau = grau
         if self.grau == 1:
             self.linkeproc = 'https://eproc1.tjto.jus.br/eprocV2_prod_1grau/externo_controlador.php?acao=principal'
         elif self.grau == 2:
             self.linkeproc = 'https://eproc2.tjto.jus.br/eprocV2_prod_2grau/externo_controlador.php?acao=principal'
+        
         ###
         self.tempfiles = tempfiles
         options = uc.ChromeOptions()
         #options.add_argument("--headless")  # Executa o navegador sem abrir a janela
-        options.add_argument("--disable-gpu")  # Desativa a GPU para melhorar a velocidade no modo headless
-        options.add_argument("--start-minimized")  # Inicia o navegador minimizado
-        options.add_argument(r"user-data-dir=C:\Users\T-GAMER\AppData\Local\Google\Chrome\User Data\Default")
         options.add_argument('--disable-popup-blocking')  # Desativa bloqueio de pop-ups
+        options.add_argument(r"--user-data-dir=C:\webdriver")
+        options.add_argument(r"--profile-directory=Profile 1")  # ou o nome que identificou
         options.add_experimental_option('prefs', {
             "download.default_directory": tempfiles,
             "download.prompt_for_download": False,  # Não perguntar onde salvar
+            "directory_upgrade": True,
             "plugins.always_open_pdf_externally": True,  # Impede o Chrome de abrir o PDF no visualizador interno
             "savefile.default_directory": tempfiles,  # Garante o diretório de download
             "safebrowsing.enabled": True,  # Habilita o modo de navegação segura (para prevenir erros)
@@ -154,13 +161,15 @@ class eproc:
         })
         options.add_argument("--kiosk-printing")  # Impede o Chrome de abrir o preview de impressão
         self.driver = uc.Chrome(options=options)
-                # Obtém a resolução da tela principal
+        #self.driver = webdriver.Chrome(options=options)
+        # Obtém a resolução da tela principal
         screen_width = self.driver.execute_script("return screen.width")
         screen_height = self.driver.execute_script("return screen.height")
 
         # Move a janela para a segunda tela (a maioria dos setups usa a segunda tela começando após a largura da primeira)
         self.driver.set_window_position(screen_width + 10, 0)  # Move para a direita
         self.driver.set_window_size(screen_width, screen_height)  # Define o tamanho como tela cheia
+        #time.sleep(500)
         
     def digitarlentamente(self,item,texto):
         for string in list(texto):
@@ -274,10 +283,12 @@ class eproc:
         select = Select(classe)
 
         # Seleciona a opção pelo valor
-        if self.grau == 1:
-            select.select_by_value("0000014559")
+        if self.tipo != None:
+            select.select_by_value(self.tipo) #tipo personalizado
+        elif self.grau == 1:
+            select.select_by_value("0000014559") #cumprimento de sentença contra a fazenda pública
         elif self.grau == 2:
-            select.select_by_value("0000009388")
+            select.select_by_value("0000009388") #precatório
         
         hoje = datetime.today()
         self.data_hoje = hoje.strftime('%d/%m/%Y')
@@ -402,7 +413,7 @@ class eproc:
                             dataalvara = correspondencias[0] #data da última movimentação
                             break
                         
-                    print(eventoalvara,dataalvara)
+                    print('alvará encontrado',eventoalvara,dataalvara)
                     netos = WebDriverWait(avo_element, 10).until(EC.presence_of_all_elements_located((By.XPATH, ".//descendant::*[@class='infraLinkDocumento']")))
                     netos[0].click()
                     
@@ -456,6 +467,7 @@ class eproc:
                     #print(eventoalvara,dataalvara)
                     netos = WebDriverWait(avo_element, 10).until(EC.presence_of_all_elements_located((By.XPATH, ".//descendant::*[@class='infraLinkDocumento']")))
                     netos[0].click()
+                    print('alvará encontrado',eventoalvara,dataalvara)
                     
                     self.driver.switch_to.window(self.driver.window_handles[-1])
                     time.sleep(2)
@@ -491,7 +503,6 @@ class eproc:
                     self.driver.switch_to.window(self.driver.window_handles[-1])
                     
                 except Exception as e: 
-                    print(e)
                     pass
                 
             #time.sleep(1)  # Espera o 1 segundo
@@ -502,8 +513,8 @@ class eproc:
             self.driver.switch_to.window(abas[0])
             
 
-def consultaralvaraseproc(grau = 1, diasatras = 1):  
-    x = eproc(r'C:\Users\ian\Downloads',grau = grau, diasatras = diasatras)
+def consultaralvaraseproc(grau = 1, diasatras = 1, tipo = None):  
+    x = eproc(r'C:\seleniumpdf',grau = grau, diasatras = diasatras,tipo = tipo)
     x.logareproc()
     #x.consultarprocesso('0002465-31.2022.8.27.2702')
     page = 1
@@ -518,19 +529,28 @@ def consultaralvaraseproc(grau = 1, diasatras = 1):
             print('encerrando')
             break
 
-
+#0000000199
 nn = input('agora ou depois (a) ou (d)')
 
 if nn == 'a':
     nn = input('(1) ou (2) grau')
+    na = input('quantos dias atrás? - ')
+    
     if nn == '1':
-        consultaralvaraseproc()
+        
+        if input('fazenda (f) ou geral (g)? ') == 'g':
+            consultaralvaraseproc(tipo = '0000000199',diasatras=int(na))
+        else:
+            consultaralvaraseproc(diasatras=int(na))
+        
     else:
-        consultaralvaraseproc(grau = 2)
+        consultaralvaraseproc(grau = 2,diasatras=int(na))
+        
 elif nn =='d':
     # Agendando a tarefa para rodar às 00:05
-    schedule.every().day.at("00:05").do(consultaralvaraseproc)
-    schedule.every().day.at("00:08").do(lambda: consultaralvaraseproc(grau=2))
+    schedule.every().day.at("00:05").do(lambda: consultaralvaraseproc())
+    schedule.every().day.at("00:30").do(lambda: consultaralvaraseproc(tipo = '0000000199'))
+    schedule.every().day.at("00:40").do(lambda: consultaralvaraseproc(grau=2))
     # Loop para rodar o agendamento
     while True:
         schedule.run_pending()  # Verifica se há tarefas agendadas para rodar

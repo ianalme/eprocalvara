@@ -218,10 +218,11 @@ class cadastrartarefa:
         
         element = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.NAME, "password")))
         element.send_keys('Edric2014@')
-        
-        element = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[text()='Entrar']")))
-        element.click()
-        
+        element.send_keys(Keys.ENTER)
+        #element = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[text()='Entrar']")))
+        #element.click()
+        print('entrou no advbox')
+        time.sleep(7)
         #inserir tarefa
         for a in self.dicionario:
             
@@ -230,13 +231,13 @@ class cadastrartarefa:
             print(dataf,datah)
             processo = a['processo']
             
-            element = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.LINK_TEXT, "Nova tarefa")))
+            element = WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, '//a[@href="posts/create"]')))
             element.click()
         
-            element = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//span[text()='Nome do cliente ou número do processo']")))
+            element = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//span[text()='Nome do cliente ou número do processo']")))
             element.click()
             
-            wait = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, '/html/body/span/span/span[1]/input')))
+            wait = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, '/html/body/span/span/span[1]/input')))
             wait.send_keys(processo)
             
             time.sleep(5)
@@ -344,8 +345,6 @@ class cadastrartarefa:
             
             
 #a = cadastrartarefa([{'processo':'','datah':'08/11/2024','dataf':'09/11/2024',documentos':[r'C:\Users\ian\Downloads\carta-concessao-beneficio.pdf']}])
-
-
 
 pastas = ['alvarainss','alvaraoutros']
 
