@@ -177,9 +177,6 @@ def lerbaixados(dir,caminhodirdoc = Path(__file__).parent.resolve().as_posix()):
             lista.append({'processo':processo,'informacoes':a,'datah':hoje,'dataf':amanha,'documentos':[f'{caminhodirdoc}/{dir}/{arquivo}']})
     #print(lista)
     return lista
-    
-            
-
 
 class cadastrartarefa:
     def __init__(self,dicionario,caminhotxt,tarefa:str):
