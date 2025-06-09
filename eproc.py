@@ -155,7 +155,7 @@ class eproc:
             "download.prompt_for_download": False,  # Não perguntar onde salvar
             "directory_upgrade": True,
             "plugins.always_open_pdf_externally": True,  # Impede o Chrome de abrir o PDF no visualizador interno
-            "savefile.default_directory": tempfiles,  # Garante o diretório de download
+            #"savefile.default_directory": tempfiles,  # Garante o diretório de download
             "safebrowsing.enabled": True,  # Habilita o modo de navegação segura (para prevenir erros)
             "plugins.plugins_disabled": ["Chrome PDF Viewer"],  # Desativa o visualizador PDF do Chrome
         })
@@ -167,8 +167,8 @@ class eproc:
         screen_height = self.driver.execute_script("return screen.height")
 
         # Move a janela para a segunda tela (a maioria dos setups usa a segunda tela começando após a largura da primeira)
-        self.driver.set_window_position(screen_width + 10, 0)  # Move para a direita
-        self.driver.set_window_size(screen_width, screen_height)  # Define o tamanho como tela cheia
+        #self.driver.set_window_position(screen_width + 10, 0)  # Move para a direita
+        #self.driver.set_window_size(screen_width, screen_height)  # Define o tamanho como tela cheia
         #time.sleep(500)
         
     def digitarlentamente(self,item,texto):
