@@ -167,8 +167,8 @@ class eproc:
         screen_height = self.driver.execute_script("return screen.height")
 
         # Move a janela para a segunda tela (a maioria dos setups usa a segunda tela começando após a largura da primeira)
-        #self.driver.set_window_position(screen_width + 10, 0)  # Move para a direita
-        #self.driver.set_window_size(screen_width, screen_height)  # Define o tamanho como tela cheia
+        self.driver.set_window_position(screen_width + 10, 0)  # Move para a direita
+        self.driver.set_window_size(screen_width, screen_height)  # Define o tamanho como tela cheia
         #time.sleep(500)
         
     def digitarlentamente(self,item,texto):
@@ -364,7 +364,7 @@ class eproc:
             
             #Procura o último evento
             try:
-                trs = WebDriverWait(self.driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, "//tr[starts-with(@id, 'trEvento')]")))
+                trs = WebDriverWait(self.driver, 25).until(EC.presence_of_all_elements_located((By.XPATH, "//tr[starts-with(@id, 'trEvento')]")))
             except:
                 print('página não carregada')
                 continue
@@ -538,8 +538,11 @@ if nn == 'a':
     
     if nn == '1':
         
-        if input('fazenda (f) ou geral (g)? ') == 'g':
+        inputer = input('fazenda (f), cumprimento de sentença provisório (g) ou cumprimento de sentença (c)? ')
+        if inputer == 'g':
             consultaralvaraseproc(tipo = '0000000199',diasatras=int(na))
+        elif inputer == 'c': 
+            consultaralvaraseproc(tipo = '0000000220',diasatras=int(na))
         else:
             consultaralvaraseproc(diasatras=int(na))
         

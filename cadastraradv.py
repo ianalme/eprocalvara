@@ -251,7 +251,9 @@ class cadastrartarefa:
                 print('erro',processo)
                 adicionar_cadastrada(processo,f'{self.caminhotxt}/cadastros.txt','erro')
                 self.driver.get('https://app.advbox.com.br/')
+                time.sleep(7)
                 continue
+            
             
             wait = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, '/html/body/span/span/span[1]/input')))
             wait.send_keys('tavana')
